@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import shap
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
@@ -159,8 +160,41 @@ def train_pipeline(data_path, models_dir):
         
         feat_imp_path = os.path.join(models_dir, "feature_importance.png")
         plt.savefig(feat_imp_path)
+        plt.close()
         print(f"Saved feature importance plot to: {feat_imp_path}")
         
+        # 8. Compute and save SHAP plots as images
+        try:
+            print("\nComputing SHAP values and saving plots...")
+            X_test_transformed = fitted_preprocessor.transform(X_test)
+            X_test_transformed_df = pd.DataFrame(X_test_transformed, columns=cleaned_feature_names)
+            
+            explainer = shap.TreeExplainer(lgb_model.named_steps['regressor'])
+            shap_values = explainer(X_test_transformed_df)
+            
+            # Plot 1: SHAP summary graph
+            plt.figure(figsize=(10, 6))
+            shap.summary_plot(shap_values, X_test_transformed_df, show=False)
+            plt.title("Global Feature Impact (SHAP Summary Plot)", fontsize=14)
+            plt.tight_layout()
+            shap_summary_path = os.path.join(models_dir, "shap_summary.png")
+            plt.savefig(shap_summary_path, bbox_inches='tight')
+            plt.close()
+            print(f"Saved SHAP summary plot to: {shap_summary_path}")
+            
+            # Plot 2: SHAP waterfall graph (First sample in test set)
+            plt.figure(figsize=(10, 6))
+            shap.plots.waterfall(shap_values[0], show=False)
+            plt.title("Decision Breakdown for a Single Test Prediction", fontsize=14)
+            plt.tight_layout()
+            shap_waterfall_path = os.path.join(models_dir, "shap_waterfall.png")
+            plt.savefig(shap_waterfall_path, bbox_inches='tight')
+            plt.close()
+            print(f"Saved SHAP waterfall plot to: {shap_waterfall_path}")
+            
+        except Exception as shap_err:
+            print(f"Could not generate SHAP plots: {shap_err}")
+            
     except Exception as e:
         print(f"Could not extract feature importances: {e}")
         

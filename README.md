@@ -74,17 +74,12 @@ Install all required libraries inside the activated virtual environment:
 pip install -r requirements.txt
 ```
 
-#### 4. Execute Scripts
-You can run the modular training orchestrator directly using the venv interpreter:
+#### 4. Run the Training Script
+Run the modular training script in your terminal:
 ```bash
-# To run preprocess and train the models
 python src/train.py
 ```
-Alternatively, you can run the single-file pipeline script:
-```bash
-python consolidated_pipeline.py
-```
-After training completes, the model is saved to `models/ensemble_model.joblib` and the performance comparison summary is printed in your terminal.
+*This script will automatically preprocess the datasets (if not already done), train and tune all models, print the model comparison summary table directly in your terminal, save the final trained ensemble model to `models/ensemble_model.joblib`, and save all analytical plots (`feature_importance.png`, `shap_summary.png`, and `shap_waterfall.png`) inside the `models/` directory.*
 
 ---
 
