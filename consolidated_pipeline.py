@@ -14,6 +14,8 @@
 
 # %%
 import os
+import warnings
+warnings.filterwarnings("ignore")
 import glob
 import joblib
 import pandas as pd
