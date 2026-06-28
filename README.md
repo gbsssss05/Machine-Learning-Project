@@ -93,10 +93,9 @@ After training completes, the model is saved to `models/ensemble_model.joblib` a
 1. Open the project folder `delivery_delay_prediction` in VS Code.
 2. Ensure you have the **Python** and **Jupyter** extensions installed in VS Code.
 3. Make sure raw datasets are placed in `data/raw/`.
-4. Open `consolidated_pipeline.py`.
-5. Click **"Run Cell"** above any block starting with `# %%`.
-6. When prompted to select a Python interpreter, select the interpreter inside the local virtual environment (`venv/Scripts/python.exe`).
-7. Run the cells sequentially to visualize output tables, LightGBM feature importances, and SHAP graphs.
+4. Open the Jupyter Notebook `consolidated_notebook.ipynb` (or alternatively the interactive script `consolidated_pipeline.py`).
+5. When prompted to select a kernel or interpreter, choose the Python interpreter inside your local virtual environment (`venv`).
+6. Run the notebook cells sequentially to visualize the model comparison tables, LightGBM feature importances, and SHAP graphs.
 
 ---
 
