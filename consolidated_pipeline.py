@@ -9,7 +9,7 @@
 # 2. Select the Python environment: `venv` (located in the project folder).
 
 # %% [markdown]
-# ## Cell 1: Import Libraries and Define Configurations
+# ## Section 1: Import Libraries and Define Configurations
 # In this cell, we import all required packages and set up path configurations.
 
 # %%
@@ -22,7 +22,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, RandomizedSearchCV, learning_curve
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.impute import SimpleImputer
@@ -47,7 +47,7 @@ print("Libraries imported successfully!")
 print(f"Project directory: {BASE_DIR}")
 
 # %% [markdown]
-# ## Cell 2: Verify Datasets
+# ## Section 2: Verify Datasets
 # Check if the raw datasets are placed in `data/raw/`.
 
 # %%
@@ -64,7 +64,75 @@ def verify_data():
 verify_data()
 
 # %% [markdown]
-# ## Cell 3: Data Preprocessing and Weather Integration
+# ## Section 3: Raw Dataset Exploration (Data Inspection)
+# This section loads and inspects the raw delivery and weather datasets to understand their schemas, statistical distributions, and initial sample structures.
+
+# %%
+# Find delivery dataset
+delivery_paths = glob.glob(os.path.join(RAW_DIR, "*delivery*.csv")) + glob.glob(os.path.join(RAW_DIR, "*train*.csv"))
+delivery_paths = [p for p in delivery_paths if 'weather' not in os.path.basename(p).lower()]
+
+if not delivery_paths:
+    print("[X] Error: Could not find delivery train.csv file! Please upload your dataset.")
+else:
+    print(f"Loading delivery raw dataset from: {delivery_paths[0]}...")
+    df_delivery_raw = pd.read_csv(delivery_paths[0])
+
+# %%
+# Inspect Delivery Dataset Schema (info)
+if 'df_delivery_raw' in locals():
+    print("\n=== Delivery Dataset Info ===")
+    df_delivery_raw.info()
+
+# %%
+# Inspect Delivery Dataset Numerical Distribution (describe)
+if 'df_delivery_raw' in locals():
+    from IPython.display import display
+    print("\n=== Delivery Dataset Numerical Summary ===")
+    display(df_delivery_raw.describe())
+
+# %%
+# Inspect Delivery Dataset Sample Rows (head)
+if 'df_delivery_raw' in locals():
+    from IPython.display import display
+    print("\n=== Delivery Dataset First 5 Rows ===")
+    display(df_delivery_raw.head(5))
+
+# %%
+# Find weather datasets
+weather_files = glob.glob(os.path.join(RAW_DIR, "*.csv"))
+weather_files = [f for f in weather_files if 'delivery' not in os.path.basename(f).lower() 
+                 and 'train' not in os.path.basename(f).lower() 
+                 and 'test' not in os.path.basename(f).lower()]
+
+if weather_files:
+    print(f"\nLoading sample weather raw dataset from: {weather_files[0]}...")
+    df_weather_raw = pd.read_csv(weather_files[0])
+else:
+    print("\n[!] No weather CSV files found yet for data inspection.")
+
+# %%
+# Inspect Weather Dataset Schema (info)
+if 'df_weather_raw' in locals():
+    print("\n=== Weather Dataset Info ===")
+    df_weather_raw.info()
+
+# %%
+# Inspect Weather Dataset Numerical Distribution (describe)
+if 'df_weather_raw' in locals():
+    from IPython.display import display
+    print("\n=== Weather Dataset Numerical Summary ===")
+    display(df_weather_raw.describe())
+
+# %%
+# Inspect Weather Dataset Sample Rows (head)
+if 'df_weather_raw' in locals():
+    from IPython.display import display
+    print("\n=== Weather Dataset First 5 Rows ===")
+    display(df_weather_raw.head(5))
+
+# %% [markdown]
+# ## Section 4: Data Preprocessing and Weather Merging Pipeline
 # Defines the preprocessing functions, maps cities, merges historical weather, and calculates distance.
 
 # %%
@@ -217,7 +285,7 @@ else:
     print(f"[OK] Preprocessing finished! Total Rows: {len(df_merged)}")
 
 # %% [markdown]
-# ## Cell 4: Train, Tune, and Compare Machine Learning Models
+# ## Section 5: Train, Tune, and Compare Machine Learning Models
 # Set up column preprocessing pipelines, train Random Forest, LightGBM, XGBoost, and Ridge Regression, and stack them.
 
 # %%
@@ -275,7 +343,7 @@ for name, model_pipeline in base_models.items():
     print(f"  Performance: RMSE={rmse:.3f}, MAE={mae:.3f}, R2={r2:.3f}")
 
 # %% [markdown]
-# ## Cell 5: Train and Save Stacking Ensemble
+# ## Section 6: Train and Save Stacking Ensemble
 # Combine the tuned base models into a Stacking Regressor and evaluate the final ensemble.
 
 # %%
@@ -304,7 +372,66 @@ joblib.dump(ensemble_pipeline, os.path.join(MODELS_DIR, "ensemble_model.joblib")
 print("Model saved to models/ensemble_model.joblib")
 
 # %% [markdown]
-# ## Cell 6: Visualize Feature Importance
+# ## Section 7: Model Diagnostic Plots
+# Plot Actual vs. Predicted values, and the Residuals Distribution to evaluate predictions.
+
+# %%
+y_pred_ensemble = y_pred_ens # align naming
+
+# A. Actual vs Predicted Scatter Plot
+plt.figure(figsize=(8, 6))
+plt.scatter(y_test, y_pred_ensemble, alpha=0.3, color='#34495e', edgecolors='none')
+plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='#e74c3c', linestyle='--', linewidth=2)
+plt.title('Actual vs. Predicted Delivery Time (Stacking Ensemble)', fontsize=14)
+plt.xlabel('Actual Time (min)', fontsize=12)
+plt.ylabel('Predicted Time (min)', fontsize=12)
+plt.grid(True, linestyle=':', alpha=0.6)
+plt.tight_layout()
+plt.show()
+
+# B. Residuals Distribution Histogram
+residuals = y_test - y_pred_ensemble
+plt.figure(figsize=(8, 6))
+sns.histplot(residuals, kde=True, color='#2ecc71', edgecolor='white', bins=30)
+plt.axvline(0, color='#e74c3c', linestyle='--', linewidth=2)
+plt.title('Residuals Distribution (Error Term Analysis)', fontsize=14)
+plt.xlabel('Prediction Error (Actual - Predicted) in Minutes', fontsize=12)
+plt.ylabel('Frequency', fontsize=12)
+plt.grid(True, linestyle=':', alpha=0.6)
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# ## Section 8: Learning Curve Analysis
+# Analyze model convergence using learning curves on a fast estimator subset.
+
+# %%
+print("Calculating learning curves (using 10k samples subset for speed)...")
+# Subsample to keep speed fast
+sample_size = min(10000, len(X))
+X_sample = X.sample(n=sample_size, random_state=42)
+y_sample = y.loc[X_sample.index]
+
+train_sizes, train_scores, test_scores = learning_curve(
+    tuned_models['LightGBM'], X_sample, y_sample, cv=3, n_jobs=-1,
+    train_sizes=np.linspace(0.1, 1.0, 4), scoring='neg_mean_squared_error'
+)
+train_rmse = np.sqrt(-train_scores.mean(axis=1))
+test_rmse = np.sqrt(-test_scores.mean(axis=1))
+
+plt.figure(figsize=(8, 6))
+plt.plot(train_sizes, train_rmse, 'o-', color="#e74c3c", linewidth=2, label="Training RMSE")
+plt.plot(train_sizes, test_rmse, 's-', color="#2ecc71", linewidth=2, label="Cross-Validation RMSE")
+plt.title("Learning Curves (LightGBM Estimator Convergence)", fontsize=14)
+plt.xlabel("Training Set Size", fontsize=12)
+plt.ylabel("RMSE (min)", fontsize=12)
+plt.legend(loc="best", fontsize=11)
+plt.grid(True, linestyle=':', alpha=0.6)
+plt.tight_layout()
+plt.show()
+
+# %% [markdown]
+# ## Section 9: Visualize Feature Importance
 # Plot feature importances from the tuned LightGBM model.
 
 # %%
@@ -324,16 +451,11 @@ plt.tight_layout()
 plt.show()
 
 # %% [markdown]
-# ## Cell 7: Explainable AI (XAI) using SHAP
+# ## Section 10: Explainable AI (XAI) using SHAP
 # This cell uses the SHAP library to explain the model's predictions on the test set.
-# It outputs:
-# 1. A summary plot showing how each feature (including weather parameters) affects the delivery time.
-# 2. A waterfall plot explaining a single delivery prediction from the test set.
 
 # %%
 import shap
-import matplotlib.pyplot as plt
-import pandas as pd
 
 # Extract preprocessor and fitted LightGBM from the ensemble pipeline
 preprocessor = ensemble_pipeline.named_steps['preprocessor']

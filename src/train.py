@@ -7,7 +7,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import shap
-from sklearn.model_selection import train_test_split, RandomizedSearchCV
+from sklearn.model_selection import train_test_split, RandomizedSearchCV, learning_curve
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 
 from models import get_feature_lists, get_preprocessor, get_base_models, get_hyperparameter_grids, build_stacking_ensemble
@@ -133,6 +133,68 @@ def train_pipeline(data_path, models_dir):
     # Save comparison report to CSV
     df_results.to_csv(os.path.join(models_dir, "model_comparison_metrics.csv"), index=False)
     
+    # 6.5 Generate Model Diagnostic Plots (Actual vs. Predicted, Residuals, Learning Curve)
+    try:
+        print("\nGenerating Stacking Ensemble diagnostic plots...")
+        # A. Actual vs Predicted Scatter Plot
+        plt.figure(figsize=(8, 6))
+        plt.scatter(y_test, y_pred_ensemble, alpha=0.3, color='#34495e', edgecolors='none')
+        plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color='#e74c3c', linestyle='--', linewidth=2)
+        plt.title('Actual vs. Predicted Delivery Time (Stacking Ensemble)', fontsize=14)
+        plt.xlabel('Actual Time (min)', fontsize=12)
+        plt.ylabel('Predicted Time (min)', fontsize=12)
+        plt.grid(True, linestyle=':', alpha=0.6)
+        plt.tight_layout()
+        act_pred_path = os.path.join(models_dir, "actual_vs_predicted.png")
+        plt.savefig(act_pred_path, dpi=150)
+        plt.close()
+        print(f"Saved actual vs. predicted plot to: {act_pred_path}")
+        
+        # B. Residuals Distribution Histogram
+        residuals = y_test - y_pred_ensemble
+        plt.figure(figsize=(8, 6))
+        sns.histplot(residuals, kde=True, color='#2ecc71', edgecolor='white', bins=30)
+        plt.axvline(0, color='#e74c3c', linestyle='--', linewidth=2)
+        plt.title('Residuals Distribution (Error Term Analysis)', fontsize=14)
+        plt.xlabel('Prediction Error (Actual - Predicted) in Minutes', fontsize=12)
+        plt.ylabel('Frequency', fontsize=12)
+        plt.grid(True, linestyle=':', alpha=0.6)
+        plt.tight_layout()
+        res_dist_path = os.path.join(models_dir, "residual_distribution.png")
+        plt.savefig(res_dist_path, dpi=150)
+        plt.close()
+        print(f"Saved residual distribution plot to: {res_dist_path}")
+        
+        # C. Learning Curves (Subsampled to 10k rows to run quickly)
+        print("Calculating learning curves (using 10k samples subset for speed)...")
+        sample_size = min(10000, len(X))
+        X_sample = X.sample(n=sample_size, random_state=42)
+        y_sample = y.loc[X_sample.index]
+        
+        train_sizes, train_scores, test_scores = learning_curve(
+            tuned_models['LightGBM'], X_sample, y_sample, cv=3, n_jobs=-1,
+            train_sizes=np.linspace(0.1, 1.0, 4), scoring='neg_mean_squared_error'
+        )
+        train_rmse = np.sqrt(-train_scores.mean(axis=1))
+        test_rmse = np.sqrt(-test_scores.mean(axis=1))
+        
+        plt.figure(figsize=(8, 6))
+        plt.plot(train_sizes, train_rmse, 'o-', color="#e74c3c", linewidth=2, label="Training RMSE")
+        plt.plot(train_sizes, test_rmse, 's-', color="#2ecc71", linewidth=2, label="Cross-Validation RMSE")
+        plt.title("Learning Curves (LightGBM Estimator Convergence)", fontsize=14)
+        plt.xlabel("Training Set Size", fontsize=12)
+        plt.ylabel("RMSE (min)", fontsize=12)
+        plt.legend(loc="best", fontsize=11)
+        plt.grid(True, linestyle=':', alpha=0.6)
+        plt.tight_layout()
+        learn_curve_path = os.path.join(models_dir, "learning_curve.png")
+        plt.savefig(learn_curve_path, dpi=150)
+        plt.close()
+        print(f"Saved learning curves plot to: {learn_curve_path}")
+        
+    except Exception as diagnostic_err:
+        print(f"Could not generate diagnostic plots: {diagnostic_err}")
+        
     # 7. Extract Feature Importance from LightGBM as Representative Tree-based Model
     try:
         print("\nExtracting and plotting feature importances from LightGBM...")

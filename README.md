@@ -39,9 +39,9 @@ This is the easiest way to run and test the project without installing Python lo
 
 1. Open [Google Colab](https://colab.research.google.com/).
 2. Click **Upload** and select `consolidated_notebook.ipynb` from this project folder.
-3. **Run Cell 1 first**: This allocates the runtime machine and installs the required packages (`geopy`, `catboost`, `shap`).
+3. **Run Section 1 first**: This allocates the runtime machine and installs the required packages (`geopy`, `catboost`, `shap`).
 4. **Upload Datasets**: Once connected, click the **Folder icon** on the left sidebar. Drag and upload all raw CSV files (the delivery dataset `train.csv` and weather cities datasets like `delhi.csv`, `bengaluru.csv`, etc.) directly into the `/content/` directory.
-5. **Run remaining cells**: Execute Cell 2 through Cell 7 step-by-step.
+5. **Run remaining sections**: Execute Section 2 through Section 10 step-by-step.
 
 ---
 
