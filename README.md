@@ -33,66 +33,11 @@ delivery_delay_prediction/
 
 ## 🚀 Running the Project
 
-### Option A: Google Colab (Zero Local Setup)
-
-This is the easiest way to run and test the project without installing Python locally.
-
 1. Open [Google Colab](https://colab.research.google.com/).
 2. Click **Upload** and select `consolidated_notebook.ipynb` from this project folder.
 3. **Run Section 1 first**: This allocates the runtime machine and installs the required packages (`geopy`, `catboost`, `shap`).
 4. **Upload Datasets**: Once connected, click the **Folder icon** on the left sidebar. Drag and upload all raw CSV files (the delivery dataset `train.csv` and weather cities datasets like `delhi.csv`, `bengaluru.csv`, etc.) directly into the `/content/` directory.
 5. **Run remaining sections**: Execute Section 2 through Section 10 step-by-step.
-
----
-
-### Option B: Local Python Environment (Using Virtual Environment)
-
-To run the project locally on your machine, you must use the local virtual environment (`venv`).
-
-#### 1. Place Raw Datasets
-Ensure your raw CSV dataset files are placed in the `data/raw/` directory inside the project folder.
-
-#### 2. Create and Activate Virtual Environment
-Create the virtual environment:
-```bash
-python -m venv venv
-```
-
-Activate the virtual environment:
-- **On Windows**:
-  ```cmd
-  venv\Scripts\activate
-  ```
-- **On macOS/Linux**:
-  ```bash
-  source venv/bin/activate
-  ```
-
-#### 3. Install Dependencies
-Install all required libraries inside the activated virtual environment:
-```bash
-pip install -r requirements.txt
-```
-
-#### 4. Run the Training Script
-Run the modular training script in your terminal:
-```bash
-python src/train.py
-```
-*This script will automatically preprocess the datasets (if not already done), train and tune all models, print the model comparison summary table directly in your terminal, save the final trained ensemble model to `models/ensemble_model.joblib`, and save all analytical plots (`feature_importance.png`, `shap_summary.png`, and `shap_waterfall.png`) inside the `models/` directory.*
-
----
-
-### Option C: VS Code (Interactive Execution)
-
-1. Open the project folder `delivery_delay_prediction` in VS Code.
-2. Ensure you have the **Python** and **Jupyter** extensions installed in VS Code.
-3. Make sure raw datasets are placed in `data/raw/`.
-4. Open the Jupyter Notebook `consolidated_notebook.ipynb` (or alternatively the interactive script `consolidated_pipeline.py`).
-5. When prompted to select a kernel or interpreter, choose the Python interpreter inside your local virtual environment (`venv`).
-6. Run the notebook cells sequentially to visualize the model comparison tables, LightGBM feature importances, and SHAP graphs.
-
----
 
 ## 📊 Model Evaluation Results Summary
 
